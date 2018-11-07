@@ -6,7 +6,10 @@
  * Time: 10:57
  */
 
+//AKA Customers
+
 require_once('./vendor/autoload.php');
+require('Header.php');
 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
@@ -75,17 +78,63 @@ class Users{
 
 }
 
-$users = new Users();
+//Create users
+
+//In future will use forms and pass that data in instead
+
+$user1 = new Users();
+$user2 = new Users();
 
 
-//var_dump($users->insert([
+?>
 
-  //  'ID' => '1',
-   // 'Name', 'Mary',
-    //'Comment' => 'I like Trains',
+<html>
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
 
-//]));
+    <div class="container">
+    
+    <div class="jumbotron" style="width: 50%; text-align: center;">
+    
+    <?php 
+        ($user1->insert([
+
+    'ID' => '1',
+    'Name', 'Mary K',
+    'Comment' => '',
+
+]));
+        
+        
+        //Create second user
+        
+        ($user2->insert([
+
+    'ID' => '2',
+    'Name', 'John B',
+    'Comment' => 'Hi',
+
+]));
+        
+        //Get the user from database
+        
+        echo($user1->get(1));
+        echo("<br />");
+        echo($user2->get(2));
+    
+    ?>
+        
+    </div>
+    </div>
+    </main>
+    
+
+</html>
+
+
+<?php
 
 //var_dump($users->delete(7));
 
-var_dump($users->delete(2));
+//var_dump($users->delete(1));
+
+?>

@@ -1,3 +1,7 @@
+
+
+
+
 <?php
 /**
  * Created by PhpStorm.
@@ -6,6 +10,7 @@
  * Time: 10:29
  */
 
+require('Header.php');
 
 require_once('./vendor/autoload.php');
 
@@ -24,7 +29,7 @@ $firebase = (new Factory)
 
 $database = $firebase->getDatabase();
 
-die(print_r($database));
+print_r($database);
 
 
 ?>
