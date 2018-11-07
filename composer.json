@@ -1,0 +1,12 @@
+{
+    "name": "paul/firebase-admin",
+    "authors": [
+        {
+            "name": "Paul Kevany",
+            "email": "pkevany25@gmail.com"
+        }
+    ],
+    "require": {
+        "kreait/firebase-php": "4.17.0"
+    }
+}
