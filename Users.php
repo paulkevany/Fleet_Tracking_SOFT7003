@@ -7,10 +7,8 @@
  */
 
 //AKA Customers
-
+session_start();
 require_once('./vendor/autoload.php');
-require('Header.php');
-
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 
@@ -29,10 +27,22 @@ protected $database;
 protected $dbname = 'users';
     
     
+    
+    
+    
+    
     public function __construct(){
+    
+        
+        if(!isset($_SESSION['user'])){
+        
+        $error = "<html><head><p>You are not logged in!</p></head></html>";
+        die($error);
+    }
 
         $account = ServiceAccount::fromJsonFile(__DIR__ . '/secret/groupproject2018-4452-047a86027b88.json');
         $firebase = (new Factory)->withServiceAccount($account)->create();
+        require('Header.php');
 
         $this->database = $firebase->getDatabase();
         
@@ -107,57 +117,14 @@ protected $dbname = 'users';
 }
 
 //Create users
-
-//In future will use forms and pass that data in instead
-
 $user1 = new Users();
-<<<<<<< Updated upstream
-$user2 = new Users();
-
-=======
->>>>>>> Stashed changes
 
 ?>
 
 <html>
 <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
 
-    <div class="container">
-    
-<<<<<<< Updated upstream
-    <div class="jumbotron" style="width: 50%; text-align: center;">
-    
-    <?php 
-        ($user1->insert([
 
-    'ID' => '1',
-    'Name', 'Mary K',
-    'Comment' => '',
-
-]));
-        
-        
-        //Create second user
-        
-        ($user2->insert([
-
-    'ID' => '2',
-    'Name', 'John B',
-    'Comment' => 'Hi',
-
-]));
-        
-        //Get the user from database
-        
-        echo($user1->get(1));
-        echo("<br />");
-        echo($user2->get(2));
-    
-    ?>
-        
-    </div>
-    </div>
-=======
     <div class="jumbotron" style="width: 50%; text-align: center; margin-top: -70%;">
         
                 <div class="header clearfix"></div>
@@ -243,7 +210,7 @@ $user2 = new Users();
            </div>
         </div>
     </div>
-    </div>
+    
     
 <?php
     
@@ -255,23 +222,8 @@ $user2 = new Users();
     ?>
     
     
-    
->>>>>>> Stashed changes
+
     </main>
     
 
 </html>
-<<<<<<< Updated upstream
-
-
-<?php
-=======
->>>>>>> Stashed changes
-
-
-<<<<<<< Updated upstream
-//var_dump($users->delete(1));
-
-?>
-=======
->>>>>>> Stashed changes

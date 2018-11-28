@@ -1,106 +1,12 @@
+
+
+
 <?php
 
-<<<<<<< Updated upstream
-include('Header.php');
+session_start();
 
-$v1 = new Vehicle("Ford","Focus","141-c-13332", 1);
-$v2 = new Vehicle("Opel","Corsa","08-D-233", 2);
-
-class Vehicle{
-
-
-    public $make;
-    public $model; 
-    public $vehicleReg; 
-    public $userID;
-    
-    
-    
-    
-    public function __construct($vehMake, $vehModel, $regNum, $user){
-        
-        $this->make = $vehMake;
-        $this->model = $vehModel;
-        $this->vehicleReg = $regNum;
-        $this->userID = $user;
-
-    
-    }
-    
-    
-    function setMake($vehMake){
-
-        $this->make = $vehMake;
-        
-        
-    }
-    
-    function getMake(){
-
-        return $this->make;
-        
-        
-    }
-    
-    
-    
-    function setModel($vehModel){
-
-        $this->mdoel = $vehModel;
-        
-        
-    }
-    
-    function getModel(){
-
-        return $this->model;
-        
-        
-    }
-    
-    
-    function setUser($user){
-        
-        $this->userID = $user;
-        
-        
-        
-    }
-    
-    
-    
-    function getUser(){
-        
-       return $this->userID;
-        
-        
-    }
-    
-    
-    
-    function setReg($reg){
-
-    
-        $this->vehicleReg = $reg; 
-    
-    }
-    
-    
-    function getReg(){
-
-        return $this->vehicleReg;
-    
-    }
- 
-    
-
-}
-
-
-
-=======
 require_once('./vendor/autoload.php');
-require('Header.php');
+
 
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
@@ -120,10 +26,17 @@ class Vehicles{
     protected $dbname = 'vehicles';
 
     public function __construct(){
+        
+          if(!isset($_SESSION['user'])){
+        
+        
+        die("You are not logged in!");
+              header('Location: logout.php');
+    }
 
         $account = ServiceAccount::fromJsonFile(__DIR__ . '/secret/groupproject2018-4452-047a86027b88.json');
         $firebase = (new Factory)->withServiceAccount($account)->create();
-
+        require('Header.php');
         $this->database = $firebase->getDatabase();
 
     }
@@ -140,11 +53,63 @@ class Vehicles{
         }else{
             return false;
         }
-
-
-
-
+        
     }
+
+        
+        
+     public function getAllVehicles(){
+
+    $dbreference = $this->database->getReference('vehicles'); //Create reference to vehicles
+        
+        $snapshot = $dbreference->getSnapshot(); //Create an overview of the vehicles table
+        
+        $value = $snapshot->getValue(); //Set value to the snapshot of the database 
+         
+         //$value will return an array
+        
+        
+         echo('<table class="table" width="450" style="margin-left: 350%; margin-top: -300%;">');
+        echo('<th>Registration</th>');
+         echo('<th>Make</th>');
+         echo('<th>Model</th>');
+         echo('<th>City</th>');
+        
+         
+         foreach($value as $item){ //Loop throught thr array
+             
+             //Construct a table using the returned data
+             echo('<tr><td>');
+             
+             echo($item['registration']);
+             
+             echo('<td > &nbsp');
+             echo($item['make']); //Get the make field out of the array and display , etc.
+             
+             echo("<td>");
+             echo($item['model']);
+             
+             echo("<td>");
+             echo($item['city']);
+             
+            
+             
+         }
+         
+          
+         
+
+         
+         
+         }
+        
+        
+    
+    
+
+
+
+    
 
     public function insert(array $data){
 
@@ -177,8 +142,6 @@ class Vehicles{
 
 
 }
->>>>>>> Stashed changes
-
 
 
 
@@ -189,76 +152,21 @@ class Vehicles{
 
 
 <html>
-<<<<<<< Updated upstream
-
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-
-    <div class="container"></div>
     
-    <div class="jumbotron" style="width: 50%; text-align: center;">
+<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase.js"></script>
+    
+<script src="app.js"></script>
+    
+
+    
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4" style="margin-top: -55%;">
+
+
+    
+    <div class="" id="jumbotron" style="width: 50%; text-align: center;">
         
         <div class="header clearfix">
-        
-        <h3 class="text-muted">Vehicles</h3>
-            <hr>
-           
-      </div>
-    
-        <table align="center" border="1px">
-           <tr>
-            <th width="130px">Registration &nbsp;</th>
-               
-               <th width="130px">Make &nbsp;</th>
-               
-                <th width="130px">Model &nbsp;</th>
-               
-            </tr>
-            <tr>
-
-            <td><?php 
-                echo($v1->getReg());
-                echo("<br />");
-                echo($v2->getReg());
-                echo("<br />");
-                
-                
-                ?></td>
-            <td><?php 
-                echo($v1->getMake());
-                echo("<br />");
-                echo($v2->getMake());
-                
-                
-                
-                ?></td>
-            <td><?php 
-                echo($v1->getModel());
-                echo("<br />");
-                echo($v2->getModel());
-                
-                
-                
-                ?></td>
-            </tr>
-            
-            
-            
-            
-        </table>
-        
-        
-        
-            
-        
-        
-
-    
-    
-    </div>
-    
-    
-    
-=======
+   
     <link rel="stylesheet" href="map.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
@@ -269,16 +177,16 @@ class Vehicles{
    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
    crossorigin=""></script>
 
-<main role="main" style=" width: 50%; margin-top: -50%;margin-left: 20%;">
-    
-    
+            
 
-    
-    <div class="jumbotron" style="align: center;">
         
-        <div id="mapid" style="margin-left: 40%; float:right;">
+        <div id="mapid" style="margin-left: 60%; float:right; position: absolute;">
         
         <script>
+            
+            
+            
+            
             var mymap = L.map('mapid').setView([52, -8], 8);
             
             L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=sk.eyJ1IjoicGtldmFueSIsImEiOiJjam9lOXBzM3UxZ2cwM3BtcmN1MDZwcnFhIn0.5GgLaGp0BBVIsMGjPk08-g', {
@@ -287,16 +195,17 @@ class Vehicles{
     id: 'mapbox.streets',
     accessToken: 'sk.eyJ1IjoicGtldmFueSIsImEiOiJjam9lOXBzM3UxZ2cwM3BtcmN1MDZwcnFhIn0.5GgLaGp0BBVIsMGjPk08-g'
 }).addTo(mymap);
+
             
-            
-            
-            var marker = L.marker([52, -8]).addTo(mymap);
+                   
+                        
+           // var marker = L.marker(getCoords([]).addTo(mymap);
         
         </script>
         
         </div>
-        
-        <div class="header clearfix"></div>
+    
+    
         
         <h3 class="text-muted" align="center">Add Vehicles</h3>
        <div class="col-md-5">
@@ -321,13 +230,18 @@ class Vehicles{
         </form>
         
         
+           </div>
+           
         
-        <div id="googleMap" style="width:100%;height:400px;"></div>
+        
+        
+        
+        <div id="googleMap" style="width:200%;height:400px;">
             <script>
                     var template = 'http://c.tiles.mapbox.com/v3/examples.map-szwdot65/{Z}/{X}/{Y}.png';
                     var provider = new MM.TemplatedLayer(template);
                     var map = new MM.Map('map', provider);
-                    map.setZoom(10).setCenter({ lat: 51.55, lon: 0.1 }); //Get current location and add to here
+                    map.setZoom(20).setCenter([54, -8]); //Get current location and add to here
                 
                 
     
@@ -335,6 +249,8 @@ class Vehicles{
         </script>
         
         
+        
+           </div>
         
         <?php
         //Check if submit button pressed
@@ -345,8 +261,8 @@ class Vehicles{
                 $model =stripslashes($_POST['model']); 
                 $registration = stripslashes($_POST['registration']);
                 $city = stripslashes($_POST['city']);
-            $v = new Vehicles();
-        
+            
+                $v = new Vehicles();
             
            $message = array(
             
@@ -369,6 +285,15 @@ class Vehicles{
             
             
         }
+           
+           $v1 = new Vehicles();
+           
+           
+          
+           echo(  $v1->getAllVehicles());
+            
+               
+           
         
         ?>
         
@@ -380,16 +305,8 @@ class Vehicles{
         
     </div>
             
-       
->>>>>>> Stashed changes
-    
-    
- </main>
-
-
-
-
-
+            </main>  
+        
 </html>
 
 
