@@ -1,21 +1,27 @@
 package com.example.shanebowen.uberclone;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.Manifest;
+import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +47,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -64,6 +72,7 @@ import org.w3c.dom.Text;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
@@ -74,19 +83,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location mLastLocation;
     LocationRequest mLocationRequest;
 
-    private Button mLogout, mRequest, mSettings;
+    private Button mLogout, mRequest, mSettings, mHistory;
 
     private LatLng pickupLocation, driverLocation;
     private LatLng destinationLocation;
 
     private int radius = 1;
 
-    private String driverId, destination, serviceSelected;
+    private String vehicleId, destination, serviceSelected;
 
     private Marker mDriverMarker, mDestinationMarker;
 
     private boolean loggingOut = false;
-    private boolean driverFound = false;
+    private boolean vehicleFound = false;
     private boolean makePayment = false;
 
     private LinearLayout mDriverInfo;
@@ -97,15 +106,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private RadioGroup mRadioGroup;
 
+    private RatingBar mRatingBar;
+
+    boolean getVehicles = false;
+    List<Marker> markerList = new ArrayList<Marker>();
+
     private List<Polyline> polylines;
-    private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
+    private static final int[] COLORS = new int[]{
+            R.color.primary_dark_material_light
+    };
 
     private double rideDistance;
     private double ridePrice;
 
-    private final int UBERX = 5;
-    private final int UBERXL = 10;
-    private final int UBERBLACK = 15;
+    private final int UBERX = 3;
+    private final int UBERXL = 5;
+    private final int UBERBLACK = 10;
+
+    private String CHANNEL_ID  = "1";
 
     private int PAYPAL_CODE = 1;
     private static PayPalConfiguration config = new PayPalConfiguration()
@@ -141,6 +159,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mRadioGroup = findViewById(R.id.radioGroup);
         mRadioGroup.check(R.id.UberX);
 
+        mRatingBar = findViewById(R.id.rating);
+
         mLogout = findViewById(R.id.log_out);
         mLogout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,7 +173,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivity(intent);
                 finish();
                 return;
-            }
+             }
         });
 
         mSettings = findViewById(R.id.settings);
@@ -167,6 +187,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        mHistory  = findViewById(R.id.history);
+
+        mHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MapsActivity.this, HistoryActivity.class);
+                startActivity(intent);
+                return;
+            }
+        });
+
 
         mRequest = findViewById(R.id.request);
         mRequest.setOnClickListener(new View.OnClickListener() {
@@ -175,13 +206,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 if(makePayment == false) {
                     String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Request");
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("PickupRequest");
 
                     GeoFire geoFire = new GeoFire(ref);
                     geoFire.setLocation(userId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
 
                     pickupLocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(pickupLocation).title("Pickup Here"));
+                    mMap.addMarker(new MarkerOptions().position(pickupLocation).title("Pickup Here").icon(BitmapDescriptorFactory.fromResource(R.drawable.pin)));
 
                     mRequest.setText("Looking for Driver...");
 
@@ -196,7 +227,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     serviceSelected = radioButton.getText().toString();
 
-                    getClosestDriver();
+                    getClosestVehicle();
 
                 }
 
@@ -224,6 +255,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         //createDriver();
+
     }
 
     @Override
@@ -265,6 +297,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         GeoFire geoFire = new GeoFire(mDatabase);
         geoFire.setLocation(userId, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+
+        if(!getVehicles) {
+            displayVehicles();
+        }
     }
 
     @Override
@@ -301,11 +337,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void getClosestDriver(){
+    private void getClosestVehicle(){
 
-        final DatabaseReference driverLoc = FirebaseDatabase.getInstance().getReference().child("Driver");
+        final DatabaseReference vehicleLoc = FirebaseDatabase.getInstance().getReference().child("Vehicle");
 
-        GeoFire geoFire = new GeoFire(driverLoc);
+        GeoFire geoFire = new GeoFire(vehicleLoc);
         GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(pickupLocation.latitude, pickupLocation.longitude), radius);
         geoQuery.removeAllListeners();
 
@@ -313,8 +349,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
 
-                if(driverFound == false) {
-                    DatabaseReference mCustomerRef = FirebaseDatabase.getInstance().getReference().child("Driver").child(key);
+                if(vehicleFound == false) {
+                    DatabaseReference mCustomerRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(key);
 
                     mCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -324,36 +360,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 for (DataSnapshot dataSnap : dataSnapshot.getChildren()) {
 
-                                    if(driverFound == true){
+                                    if(vehicleFound == true){
                                         return;
                                     }
+
                                     if (dataSnap.getKey().equals("service")) {
 
                                         if(dataSnap.getValue(String.class).equals(serviceSelected)) {
 
-                                            driverFound = true;
-                                            driverId = dataSnapshot.getKey();
+                                            vehicleFound = true;
+                                            vehicleId = dataSnapshot.getKey();
 
-                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Driver").child(driverId).child("userRequest");
+                                            DatabaseReference vehicleRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId)
+                                                    .child("userRequest");
                                             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-                                            driverRef.child("userID").setValue(userId);
-                                            driverRef.child("destination").setValue(destination);
-                                            driverRef.child("destinationLatitude").setValue(destinationLocation.latitude);
-                                            driverRef.child("destinationLongitude").setValue(destinationLocation.longitude);
+                                            vehicleRef.child("userID").setValue(userId);
+                                            vehicleRef.child("destination").setValue(destination);
+                                            vehicleRef.child("destinationLatitude").setValue(destinationLocation.latitude);
+                                            vehicleRef.child("destinationLongitude").setValue(destinationLocation.longitude);
 
-                                            getDriverLocation(driverId);
-                                            getDriverInfo(driverId);
-                                            getDestination(driverId);
+                                            getVehicleLocation(vehicleId);
+                                            getVehicleInfo(vehicleId);
+                                            getDestination(vehicleId);
                                         }
-
                                     }
-
                                 }
-
                             }
-
-
                         }
 
                         @Override
@@ -379,9 +412,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onGeoQueryReady() {
 
-                if(driverFound == false){
+                if(vehicleFound == false){
                     radius = radius + 1;
-                    getClosestDriver();
+                    getClosestVehicle();
                 }
 
             }
@@ -393,8 +426,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void getDriverLocation(String driverId){
-        final DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child("Driver").child(driverId);
+    private void getVehicleLocation(String driverId){
+        final DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(driverId);
 
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -413,7 +446,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         longitude = dataSnap.child("1").getValue(Double.class);
                     }
 
-                    if (dataSnap.getKey().equals("name")) {
+                    if (dataSnap.getKey().equals("registration")) {
                         name = dataSnap.getValue(String.class);
                     }
 
@@ -434,14 +467,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     float distance = pickupLoc.distanceTo(driverLoc);
 
                     if(distance < 100){
-                        mRequest.setText("Driver Nearby");
+                        mRequest.setText("Vehicle Nearby");
                     }
 
                     else if(distance >= 100) {
-                        mRequest.setText("Driver Found: " + String.valueOf(distance));
+                        mRequest.setText("Vehicle Found: " + String.valueOf(distance));
+
+                        mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLocation).title("Vehicle Location")
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+
+                        createNotificationChannel();
+
+                        //Passing the values that will be displayed in the notification
+                        NotificationCompat.Builder myNotification = new NotificationCompat.Builder(MapsActivity.this, CHANNEL_ID)
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setContentText("Vehicle found " + distance + "km away")
+                                .setContentTitle(getString(R.string.phone_notification));
+
+                        NotificationManager mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+                        mNotificationManager.notify(0, myNotification.build());
                     }
 
-                    mDriverMarker = mMap.addMarker(new MarkerOptions().position(driverLocation).title("Driver " + name + " Location"));
+                    for (int i = 0; i < markerList.size(); i++){
+                        markerList.get(i).remove();
+                    }
+
 
                 }
 
@@ -457,25 +507,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void getDriverInfo(final String driverId){
+    private void getVehicleInfo(final String driverId){
+
         mDriverInfo.setVisibility(View.VISIBLE);
-        DatabaseReference mDriverRef = FirebaseDatabase.getInstance().getReference().child("Driver").child(driverId);
+        DatabaseReference mDriverRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(driverId);
 
         mDriverRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
+                String carName = "";
                 for (DataSnapshot dataSnap : dataSnapshot.getChildren()) {
 
-                    if (dataSnap.getKey().equals("name")) {
-                        mDriverName.setText(dataSnap.getValue(String.class));
+                    if (dataSnap.getKey().equals("make") || dataSnap.getKey().equals("model") ) {
+                        carName += dataSnap.getValue(String.class) + " ";
+                        mDriverName.setText(carName);
                     }
 
-//                    if (dataSnap.getKey().equals("phoneNumber")) {
-//                        mDriverPhone.setText(dataSnap.getValue(String.class));
-//                    }
-
-                    if (dataSnap.getKey().equals("car")) {
+                    if (dataSnap.getKey().equals("registration")) {
                         mDriverCar.setText(dataSnap.getValue(String.class));
                     }
 
@@ -495,6 +544,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
 
+                    float sumRatings = 0;
+                    float numRatings = 0;
+                    float avgRatings = 0;
+
+                    for(DataSnapshot child : dataSnapshot.child("rating").getChildren()){
+                        sumRatings = sumRatings + Integer.valueOf(child.getValue().toString());
+                        numRatings ++;
+                    }
+
+                    if(numRatings > 0){
+                        avgRatings = sumRatings/numRatings;
+                        mRatingBar.setRating(avgRatings);
+                    }
+
                 }
 
             }
@@ -508,7 +571,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void getDestination(String driverId){
 
-        final DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child("Driver").child(driverId);
+        final DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(driverId);
 
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -530,7 +593,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mDestinationMarker.remove();
                     }
 
-                    mDestinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation).title("Destination"));
+                    mDestinationMarker = mMap.addMarker(new MarkerOptions().position(destinationLocation).title("Destination").icon(BitmapDescriptorFactory.fromResource(R.drawable.pin)));
+                    ;
 
                 }
 
@@ -556,6 +620,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     makePayment = true;
 
                     calculateRidePrice();
+
+                    createNotificationChannel();
+
+                    //Passing the values that will be displayed in the notification
+                    NotificationCompat.Builder myNotification = new NotificationCompat.Builder(MapsActivity.this, CHANNEL_ID)
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContentText("You have arrived at your destination")
+                            .setContentTitle(getString(R.string.phone_notification));
+
+                    NotificationManager mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+                    mNotificationManager.notify(1, myNotification.build());
                 }
 
             }
@@ -570,7 +645,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void calculateRidePrice(){
 
-        DatabaseReference mDriverRef = FirebaseDatabase.getInstance().getReference().child("Driver").child(driverId);
+        DatabaseReference mDriverRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId);
 
         mDriverRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -599,6 +674,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mRideFare.setText("€" + ridePrice);
 
+                recordRide();
+
             }
 
             @Override
@@ -606,7 +683,92 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+    }
 
+    private void recordRide(){
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId).child("history");
+        DatabaseReference customerRef = FirebaseDatabase.getInstance().getReference().child("User").child(userId).child("history");
+        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference().child("History");
+
+        String requestId = historyRef.push().getKey();
+        driverRef.child(requestId).setValue(true);
+        customerRef.child(requestId).setValue(true);
+
+        HashMap map = new HashMap();
+        map.put("vehicle", vehicleId);
+        map.put("customer", userId);
+        map.put("rating", 0);
+
+        map.put("destination", destination);
+        map.put("distance", rideDistance);
+        map.put("price", ridePrice);
+
+        map.put("location/from/lat", pickupLocation.latitude);
+        map.put("location/from/lng", pickupLocation.longitude);
+
+        map.put("location/to/lat", destinationLocation.latitude);
+        map.put("location/to/lng", destinationLocation.longitude);
+
+        historyRef.child(requestId).updateChildren(map);
+
+    }
+
+    private void displayVehicles(){
+
+        getVehicles = true;
+        DatabaseReference vehicleLocation = FirebaseDatabase.getInstance().getReference().child("Vehicle");
+
+        vehicleLocation.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                double latitude = 0;
+                double longitude = 0;
+
+                for (DataSnapshot dataSnap : dataSnapshot.getChildren()) {
+
+                        if (dataSnap.getKey()!=null) {
+
+                            if(dataSnap.child("l").exists()) {
+
+                                latitude = dataSnap.child("l").child("0").getValue(Double.class);
+                                longitude = dataSnap.child("l").child("1").getValue(Double.class);
+
+                                LatLng vehicleLocation = new LatLng(latitude, longitude);
+                                mDriverMarker = mMap.addMarker(new MarkerOptions().position(vehicleLocation).title("Vehicle").
+                                        icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+                                mDriverMarker.setTitle("Vehicle");
+
+                                markerList.add(mDriverMarker);
+                            }
+                        }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    //CreateNotificationChannel creates the channel for the notification
+    private void createNotificationChannel() {
+
+        // Create the NotificationChannel, but only on API 26+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            // Register the channel with the system
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     private void payPalPayment() {
@@ -638,6 +800,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if(paymentResult.equals("approved")){
                         Toast.makeText(getApplicationContext(), "Payment Successful", Toast.LENGTH_SHORT).show();
                         mRequest.setEnabled(false);
+
+                        createNotificationChannel();
+
+                        //Passing the values that will be displayed in the notification
+                        NotificationCompat.Builder myNotification = new NotificationCompat.Builder(MapsActivity.this, CHANNEL_ID)
+                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setContentText("Thank you for payment")
+                                .setContentTitle(getString(R.string.phone_notification));
+
+                        NotificationManager mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+                        mNotificationManager.notify(2, myNotification.build());
                     }
 
                 } catch (JSONException e) {
@@ -658,12 +831,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onDestroy();
     }
 
-    private void drawRoute(LatLng pickupLocation, LatLng driverLocation){
+    private void drawRoute(LatLng pickupLocation, LatLng destinationLoc){
 
         Routing routing = new Routing.Builder()
                 .travelMode(AbstractRouting.TravelMode.DRIVING)
                 .withListener(this)
-                .waypoints(pickupLocation, driverLocation)
+                .waypoints(pickupLocation, destinationLoc)
                 .key("AIzaSyDLRnHvXy7s2zwiD_o5sCzyKAZOf2JzFiA")
                 .build();
         routing.execute();
@@ -735,17 +908,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void createDriver(){
 
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("Driver");
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("Vehicle");
         String id = mDatabase.push().getKey();
 
         GeoFire geoFire = new GeoFire(mDatabase);
-        geoFire.setLocation(id, new GeoLocation(51.904039, -8.5037761));
+        geoFire.setLocation(id, new GeoLocation(51.934039, -8.4837761));
 
-        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Driver").child(id);
-        driverRef.child("name").setValue("Tim");
-        driverRef.child("phoneNumber").setValue("086-1234567");
-        driverRef.child("car").setValue("Sedan");
-        driverRef.child("service").setValue("UberBlack");
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(id);
+        driverRef.child("make").setValue("Ford");
+        driverRef.child("model").setValue("Mondeo");
+        driverRef.child("registration").setValue("11-C-5129");
+        driverRef.child("service").setValue("UberX");
 
     }
 
