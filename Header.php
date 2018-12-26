@@ -1,4 +1,39 @@
 
+
+
+<script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
+		
+		<script>
+					// Initialize Firebase
+					var config = {
+    				apiKey: "AIzaSyB9bReOizDs7NGcKKuswCylGZx-nhNXt3Y",
+    				authDomain: "uber-23725.firebaseapp.com",
+    				databaseURL: "https://uber-23725.firebaseio.com",
+    				projectId: "uber-23725",
+    				storageBucket: "uber-23725.appspot.com",
+    				messagingSenderId: "905617104551"
+  				};
+  				firebase.initializeApp(config);
+			
+			var database = firebase.database();
+			
+			firebase.auth().onAuthStateChanged(user =>{
+						
+						
+						if(user){
+							
+						
+						}else{
+							document.write("You need to be signed in to access this page!");
+							window.location = "index.php";
+							
+						}
+					});
+			
+		</script>
+		
+
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -15,31 +50,27 @@
 
     <!-- Custom styles for this template -->
     <link href="vendor/twbs/bootstrap/dist/css/dashboard.css" rel="stylesheet">
-  </head>
+  
 
-  <body>
     <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
       <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="index.php">Fleet Tracker</a>
-      <input class="form-control form-control-dark w-100" type="text" placeholder="Search Vehicles and Users" aria-label="Search">
+      <input id="searchForm" class="form-control form-control-dark w-100" type="text" placeholder="Search OrderID" aria-label="Search">
+		<button class="btn-primary pull-right" id="searchBtn">Search</button>
         <a class="navbar-brand col-sm-2 col-md-1 mr-0" href="logout.php">Logout</a>
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
           
         </li>
       </ul>
-    </nav>
+		</nav>
+	  
+   
 
-    <div class="container-fluid">
+    <div class="container-fluid" style="width: 10%; height: 50%;">
       <div class="row">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
-              <li class="nav-item">
-                <a class="nav-link active" href="index.php">
-                  <span data-feather="home"></span>
-                  Dashboard <span class="sr-only">(current)</span>
-                </a>
-              </li>
               <li class="nav-item">
                 <a class="nav-link" href="Orders.php">
                   <span data-feather="file"></span>
@@ -64,6 +95,15 @@
                   Support
                 </a>
               </li>
+				<li class="nav-item">
+                
+                  <span data-feather="bar-chart-2"></span>
+                  <p class="nav-link" id="currentUser"></p>
+					
+							
+					
+                
+              </li>
               <li class="nav-item">
                 <a class="nav-link">
                   <span data-feather="layers"></span>
@@ -71,11 +111,38 @@
                 </a>
               </li>
             </ul>
+	
           </div>
-        </nav>
+        
+			<script>
+			
+			//Search functionality
+				
+			
+				var searchForm = document.getElementByID("searchForm");
+				
+			
+				document.getElementByID("searchBtn").addEventListener("click", function(){
+					
+						
+					
+					
+					
+					
+					alert(document.getElementByID("searchForm").value);
+					
+					
+				});
+				
+			
+			
+			
+			</script>
+		  
+		 
 
 
-
+	</head>
             
             
             
@@ -83,6 +150,6 @@
             
       </div>
     </div>
+	</head>
 
    
-  </body>

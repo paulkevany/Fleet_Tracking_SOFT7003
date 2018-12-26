@@ -1,229 +1,138 @@
-<?php
-/**
- * Created by PhpStorm.
- * User: paul
- * Date: 14/10/2018
- * Time: 10:57
- */
-
-//AKA Customers
-session_start();
-require_once('./vendor/autoload.php');
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\ServiceAccount;
-
-$name;
-$email;
-$username;
-$city;
-$approved;
-
-
-
-class Users{
-
-    
-protected $database;
-protected $dbname = 'users';
-    
-    
-    
-    
-    
-    
-    public function __construct(){
-    
-        
-        if(!isset($_SESSION['user'])){
-        
-        $error = "<html><head><p>You are not logged in!</p></head></html>";
-        die($error);
-    }
-
-        $account = ServiceAccount::fromJsonFile(__DIR__ . '/secret/groupproject2018-4452-047a86027b88.json');
-        $firebase = (new Factory)->withServiceAccount($account)->create();
-        require('Header.php');
-
-        $this->database = $firebase->getDatabase();
-        
-    
-
-    }
-
-    
-    public function getAllUsers(){
-
-    
-        $reference = $this->database->getReference('users');
-        
-        $snapshot = $reference->getSnapshot();
-        
-        $value = $snapshot->getValue();
-        
-        return $value;
-    
-    }
-    
-    
-    
-    public function get( $userID = null){
-
-        if(empty($userID) || !isset($userID)){
-
-            return false;
-        }
-
-        if($this->database->getReference($this->dbname)->getSnapshot()->hasChild($userID)){
-            return $this->database->getReference($this->dbname)->getChild($userID)->getValue();
-        }else{
-            return false;
-        }
-
-
-
-
-    }
-
-    public function insert(array $data){
-
-        if(empty($data)|| !isset($data)){
-            return false;
-        }
-
-        foreach ($data as $key => $value){
-            $this->database->getReference()->getChild($this->dbname)->getChild($key)->set($value);
-        }
-
-        return true;
-    }
-
-        public function delete($userID){
-
-            if(empty($userID) || !isset($userID)){
-
-                if($this->database->getReference($this->dbname)->getSnapshot()->getChild($userID)){
-                    $this->database->getReference($this->dbname)->getChild($userID)->remove();
-                    return true;
-                }else{
-                }
-            }
-
-        }
-
-
-
-
-
-}
-
-//Create users
-$user1 = new Users();
-
-?>
 
 <html>
-<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+	<head>
+	
+	<script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
+		
+		<script>
+					// Initialize Firebase
+					var config = {
+    				apiKey: "AIzaSyB9bReOizDs7NGcKKuswCylGZx-nhNXt3Y",
+    				authDomain: "uber-23725.firebaseapp.com",
+    				databaseURL: "https://uber-23725.firebaseio.com",
+    				projectId: "uber-23725",
+    				storageBucket: "uber-23725.appspot.com",
+    				messagingSenderId: "905617104551"
+  				};
+  				firebase.initializeApp(config);
+			
+			var database = firebase.database();
+			
+			firebase.auth().onAuthStateChanged(user =>{
+						
+						
+						if(user){
+							
+						
+						}else{
+							document.write("You need to be signed in to access this page!");
+							window.location = "index.php";
+							
+						}
+					});
+			
+		</script>
+		
+		
+		<?php require("header.php") ?>
+	</head>
+    
 
 
-    <div class="jumbotron" style="width: 50%; text-align: center; margin-top: -70%;">
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4" style="margin-top: -55%;">
+
+
+   
         
-                <div class="header clearfix"></div>
+       
+    
         
-        <h3 class="text-muted" align="center">Add Users</h3>
-       <div class="col-md-5">
-    <div class="form-area" style="margin-left: 80%; width:100%;">  
-        <form role="form" action="" method="post">
+        
+       <div class="col-md-5" style="margin-top: -20%;">
+    	
+		   <div class="form-area" style="margin-left: 50%; width:100%;">  
+			   <h3 class="text-muted" align="center">Add User</h3>
+        
         <br>
                     
                     <div class="form-group">
-						<input type="text" class="form-control" id="name" name="name" placeholder="Name" required>
+						<input type="text" class="form-control" id="emailForm" name="email" placeholder="Email" required>
 					</div>
 					<div class="form-group">
-						<input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
-					</div>
-					<div class="form-group">
-						<input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
-					</div>
-					<div class="form-group">
-						<input type="text" class="form-control" id="city" name="city" placeholder="City" required>
-					</div>
-            
-        <input type="submit" id="submit" name="submit" class="btn btn-primary pull-right" value="Add User" style="margin-left: 15%;">
-        </form>
-        
-        
-        
-    
-    <?php 
-        
-        
-        if(isset($_POST['submit'])){
-
-        //Secure input
-            
-        
-            
-            $name = stripslashes($_POST['name']);
-            $email = stripslashes($_POST['email']);
-            $username = stripslashes($_POST['username']);
-            $city = stripslashes($_POST['city']);
-            
-            
-            $name = htmlspecialchars($name);
-            
-            $username= htmlspecialchars($username);
-            $city = htmlspecialchars($city);
-            
-            $userdata = array(
-            
-            
-                '"'.$username.'"' => array(
-
-                   'Name' => $name,
-                    'Email' => $email,
-                    'Username' => $username,
-                    'City' => $city,
-                    'Approved' => 0
-                
-              ) );
-            
-            if($user1->insert($userdata) == true){
-
-              echo('<script>alert("Successfully added User!")</script>');
-            }else{
-
-                 echo('<script>alert("An error occured adding user!");</script>');
-            
-            }
-
-                        
-
-        
-        }
-        
-    
+						<input type="password" class="form-control" id="passwordForm" required name="password" placeholder="Password" >
+			   </div>
+             
+			<button type="submit" id="addUserBtn" onclick="addUser();" name="addUserBtn" class="btn btn-primary pull-right" value="Add User" style="width: 100%;">Add User</button>
+		
        
-    
-    
-    ?>
-    
+			<script>
+			
+				function addUser(){
+					
+					var email = document.getElementById("emailForm").value;
+					var password = document.getElementById("passwordForm").value;
+					
+					if(email.length < 4){
+						alert("Email must be at least 4 characters!");
+						return;
+					}
+					
+					if(password.length < 8){
+						alert("Password must be at least 8 characters!");
+						return;
+						
+					}
+					
+					firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+  						// Handle Errors here.
+  					var errorCode = error.code;
+  					var errorMessage = error.message;
+					
+						if(error){
+						alert(errorMessage);
+						return;
+							
+						}else{
+							
+							alert("Successful!");
+							email.value = "";
+							password.value = "";
+							return;
+						}
+				
+					});
+					
+					
+					
+					
+				}
+					
+					
+					
+			
+			   </script>
+      			   
+			    
+			  
+			   
+        
+			    
+        
            </div>
-        </div>
-    </div>
+           
+        
+	</div>
+	
+	</main>
+        
     
-    
-<?php
-    
-    
-    
-    var_dump($user1->getAllUsers());
-    
-    
-    ?>
-    
-    
-
-    </main>
-    
+        
 
 </html>
+
+
+
+        
+    
+
+
