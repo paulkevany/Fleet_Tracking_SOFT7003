@@ -96,6 +96,12 @@
                 </a>
               </li>
 				<li class="nav-item">
+                <a class="nav-link" href="Reports.php">
+                  <span data-feather="reports"></span>
+                  Reports
+                </a>
+              </li>
+				<li class="nav-item">
                 
                   <span data-feather="bar-chart-2"></span>
                   <p class="nav-link" id="currentUser"></p>
@@ -119,20 +125,7 @@
 			//Search functionality
 				
 			
-				var searchForm = document.getElementByID("searchForm");
 				
-			
-				document.getElementByID("searchBtn").addEventListener("click", function(){
-					
-						
-					
-					
-					
-					
-					alert(document.getElementByID("searchForm").value);
-					
-					
-				});
 				
 			
 			
