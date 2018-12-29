@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 public class HistoryActivity extends AppCompatActivity {
 
+    //Declaring Global Variables
     private String userId;
 
     private Button backBtn;
@@ -30,13 +31,14 @@ public class HistoryActivity extends AppCompatActivity {
     private RecyclerView.Adapter mHistoryAdapter;
     private RecyclerView.LayoutManager mHistoryLayoutManager;
 
+    //OnCreate method
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
 
+        //If user clicks back then it will return to the maps activity
         backBtn = (Button) findViewById(R.id.backBtn);
-
         backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,9 +49,11 @@ public class HistoryActivity extends AppCompatActivity {
         });
 
 
+        //Setting up the recycler view
         mHistoryRecyclerView = (RecyclerView) findViewById(R.id.historyRecyclerView);
         mHistoryRecyclerView.setNestedScrollingEnabled(false);
         mHistoryRecyclerView.setHasFixedSize(true);
+
         mHistoryLayoutManager = new LinearLayoutManager(HistoryActivity.this);
         mHistoryRecyclerView.setLayoutManager(mHistoryLayoutManager);
         mHistoryAdapter = new HistoryAdapter(getDataSetHistory(), HistoryActivity.this);
@@ -60,6 +64,7 @@ public class HistoryActivity extends AppCompatActivity {
 
     }
 
+    //Getting every ride id in the history and passing it to the GetRideInformation
     private void getUserHistoryRideId() {
         DatabaseReference userHistoryDatabase = FirebaseDatabase.getInstance().getReference().child("User").child(userId).child("history");
         userHistoryDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -79,6 +84,7 @@ public class HistoryActivity extends AppCompatActivity {
         });
     }
 
+    //Get the ride information for the particular ride id.
     private void GetRideInformation(String rideKey) {
         DatabaseReference historyDatabase = FirebaseDatabase.getInstance().getReference().child("History").child(rideKey);
         historyDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -99,6 +105,7 @@ public class HistoryActivity extends AppCompatActivity {
         });
 
     }
+
 
     private ArrayList resultsHistory = new ArrayList<HistoryObject>();
     private ArrayList<HistoryObject> getDataSetHistory() {

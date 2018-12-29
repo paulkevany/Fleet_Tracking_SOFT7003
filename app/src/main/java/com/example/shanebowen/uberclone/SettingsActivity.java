@@ -2,10 +2,7 @@ package com.example.shanebowen.uberclone;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -64,6 +61,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     }
 
+    //Getting the user information from firebase
     private void getUserInformation() {
         mDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -95,7 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     }
 
-
+    //Store the information to firebase
     private void saveInformation() {
 
         mName = mNameText.getText().toString();

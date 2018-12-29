@@ -19,6 +19,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    //Declaring Global variables
     private EditText mEmail, mPassword;
     private Button mRegister;
 
@@ -48,8 +49,8 @@ public class RegisterActivity extends AppCompatActivity {
         mEmail = (EditText) findViewById(R.id.Email);
         mPassword = (EditText) findViewById(R.id.Password);
 
+        //When the user clicks register, it will read in the email and password from the edit text and create a new user in firebase
         mRegister = (Button) findViewById(R.id.Register);
-
         mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

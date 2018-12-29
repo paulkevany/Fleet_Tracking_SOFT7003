@@ -1,6 +1,5 @@
 package com.example.shanebowen.uberclone;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         mSign_In = (Button) findViewById(R.id.Sign_In);
         mRegister = (Button) findViewById(R.id.Register);
 
+        //When the user clicks sign in, it will take you to the signInActivity
         mSign_In.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //When the user clicks register, it will take you to the registerActivity
         mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

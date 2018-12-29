@@ -1,6 +1,5 @@
 package com.example.shanebowen.uberclone.historyRecyclerView;
 
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +20,8 @@ import java.util.Map;
 
 public class HistorySingleActivity extends AppCompatActivity {
 
+    //Declaring Global variables
+
     private String rideId, vehicleId;
 
     private TextView locationRide;
@@ -34,8 +35,6 @@ public class HistorySingleActivity extends AppCompatActivity {
     private RatingBar ratingBar;
 
     private DatabaseReference historyRideInfo;
-
-    private LatLng destinationLocation, pickupDestination;
 
     private Button saveBtn;
 
@@ -73,6 +72,7 @@ public class HistorySingleActivity extends AppCompatActivity {
 
     }
 
+    //Get the information of the ride
     private void getRideInformation() {
         historyRideInfo.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -101,15 +101,6 @@ public class HistorySingleActivity extends AppCompatActivity {
                         if(child.getKey().equals("rating")){
                             ratingBar.setRating(Integer.valueOf(child.getValue().toString()));
                         }
-
-                        if(child.getKey().equals("location")){
-                            pickupDestination = new LatLng(Double.valueOf(child.child("from").child("lat").getValue().toString()),
-                                    Double.valueOf(child.child("from").child("lng").getValue().toString()));
-
-                            destinationLocation = new LatLng(Double.valueOf(child.child("to").child("lat").getValue().toString()),
-                                    Double.valueOf(child.child("to").child("lng").getValue().toString()));
-
-                        }
                     }
 
                 }
@@ -123,29 +114,40 @@ public class HistorySingleActivity extends AppCompatActivity {
         });
     }
 
+    //Display the rating bar
     private void displayVehicleRating() {
         ratingBar.setVisibility(View.VISIBLE);
         ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
                 historyRideInfo.child("rating").setValue(rating);
-                DatabaseReference driverRatingDB = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId).child("rating");
-                driverRatingDB.child(rideId).setValue(rating);
+                DatabaseReference vehicleRatingRef = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId).child("rating");
+                vehicleRatingRef.child(rideId).setValue(rating);
             }
         });
     }
 
+    //Get the vehicle information
     private void getVehicleInformation(String vehicleId) {
         DatabaseReference vehicleDatabase = FirebaseDatabase.getInstance().getReference().child("Vehicle").child(vehicleId);
         vehicleDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()){
-                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    for(DataSnapshot child : dataSnapshot.getChildren()) {
+                        if (child.getKey().equals("make")) {
+                            vehicleMake.setText(child.getValue().toString());
+                        }
 
-                    vehicleMake.setText("Make: " + map.get("make").toString());
-                    vehicleModel.setText("Model: " + map.get("model").toString());
-                    vehicleService.setText("Service: " + map.get("service").toString());
+                        if (child.getKey().equals("model")) {
+                            vehicleModel.setText(child.getValue().toString());
+                        }
+
+                        if (child.getKey().equals("service")) {
+                            vehicleService.setText(child.getValue().toString());
+                        }
+
+                    }
                 }
             }
 

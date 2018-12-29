@@ -14,11 +14,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class SignInActivity extends AppCompatActivity {
 
+    //Declaring Global variables
     private EditText mEmail, mPassword;
     private Button mLog_In;
 
@@ -48,8 +47,8 @@ public class SignInActivity extends AppCompatActivity {
         mEmail = (EditText) findViewById(R.id.Email);
         mPassword = (EditText) findViewById(R.id.Password);
 
+        //When the user clicks log in, it reads the email and password from the edit text & check if the sign in is valid
         mLog_In = (Button) findViewById(R.id.Log_In);
-
         mLog_In.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

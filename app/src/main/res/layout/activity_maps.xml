@@ -75,7 +75,7 @@
             android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/driverInfo"
+                android:id="@+id/vehicleInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -90,7 +90,7 @@
                     android:layout_gravity="center" />
 
                 <TextView
-                    android:id="@+id/driverService"
+                    android:id="@+id/vehicleService"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -104,7 +104,7 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/driverName"
+                        android:id="@+id/vehicleName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="30dp"
@@ -130,7 +130,7 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/driverCar"
+                        android:id="@+id/vehicleCar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="30dp"
